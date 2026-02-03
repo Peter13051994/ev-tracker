@@ -22,7 +22,14 @@ export default function App() {
   })
   const [darkMode, setDarkMode] = useState(false)
 
-  // LOAD
+  // ===== APPLY DARK MODE TO <html> =====
+  useEffect(() => {
+    const html = document.documentElement
+    if (darkMode) html.classList.add("dark")
+    else html.classList.remove("dark")
+  }, [darkMode])
+
+  // ===== LOAD =====
   useEffect(() => {
     const load = async () => {
       const { data: tripsData } = await supabase
@@ -68,7 +75,7 @@ export default function App() {
     load()
   }, [])
 
-  // SAVE
+  // ===== SAVE =====
   useEffect(() => {
     if (trips.length)
       supabase.from("trips").upsert(
@@ -99,13 +106,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div
-        className={`pb-16 min-h-screen ${
-          darkMode
-            ? "bg-gray-900 text-white"
-            : "bg-gray-100"
-        }`}
-      >
+      <div className="pb-16 min-h-screen bg-gray-100 dark:bg-gray-900 dark:text-white">
         <Routes>
           <Route
             path="/"
