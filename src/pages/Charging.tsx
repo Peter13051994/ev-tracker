@@ -1,59 +1,69 @@
 import { useState } from "react"
 import type { Charging } from "../types"
-import type { Dispatch, SetStateAction } from "react"
+import { exportToCsv } from "../lib/exportCsv"
 
 type Props = {
   chargings: Charging[]
-  setChargings: Dispatch<SetStateAction<Charging[]>>
+  setChargings: React.Dispatch<React.SetStateAction<Charging[]>>
 }
 
-const HOME_ELECTRICITY_PRICE = 0.15
-
-export default function Charging({ chargings, setChargings }: Props) {
+export default function Charging({
+  chargings,
+  setChargings,
+}: Props) {
   const [date, setDate] = useState("")
   const [kwh, setKwh] = useState("")
-  const [location, setLocation] = useState<Charging["location"]>("DOMA")
-  const [price, setPrice] = useState("")
+  const [location, setLocation] =
+    useState<Charging["location"]>("DOMA")
+
+  const pricePerKwh = {
+    DOMA: 0.12,
+    PRACA: 0,
+    VEREJNE: 0.45,
+  }
 
   const addCharging = () => {
     if (!date || !kwh) return
 
-    let finalPrice = 0
+    const price =
+      Number(kwh) * pricePerKwh[location]
 
-    if (location === "DOMA") {
-      finalPrice = Number(kwh) * HOME_ELECTRICITY_PRICE
-    }
-
-    if (location === "VEREJNE") {
-      finalPrice = Number(price || 0)
-    }
-
-    const charging: Charging = {
-      id: Date.now(),
-      date,
-      kwh: Number(kwh),
-      location,
-      price: finalPrice,
-    }
-
-    setChargings(prev => [...prev, charging])
+    setChargings(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        date,
+        kwh: Number(kwh),
+        location,
+        price,
+      },
+    ])
 
     setDate("")
     setKwh("")
-    setPrice("")
-    setLocation("DOMA")
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold">Nabíjanie</h1>
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold">Nabíjanie</h1>
 
-      <div className="bg-white p-4 rounded-lg shadow space-y-3">
+        <button
+          onClick={() =>
+            exportToCsv("nabijania.csv", chargings)
+          }
+          className="bg-gray-600 text-white px-3 py-1 rounded-lg"
+        >
+          Export CSV
+        </button>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow space-y-2">
         <input
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full border rounded p-2"
+          className="w-full border p-2 rounded"
         />
 
         <input
@@ -61,40 +71,32 @@ export default function Charging({ chargings, setChargings }: Props) {
           placeholder="kWh"
           value={kwh}
           onChange={e => setKwh(e.target.value)}
-          className="w-full border rounded p-2"
+          className="w-full border p-2 rounded"
         />
 
         <select
           value={location}
           onChange={e =>
-            setLocation(e.target.value as Charging["location"])
+            setLocation(
+              e.target.value as Charging["location"]
+            )
           }
-          className="w-full border rounded p-2"
+          className="w-full border p-2 rounded"
         >
-          <option value="DOMA">🏠 Doma</option>
-          <option value="PRACA">🏢 Práca (zadarmo)</option>
-          <option value="VEREJNE">⚡ Verejné</option>
+          <option value="DOMA">Doma</option>
+          <option value="PRACA">Práca</option>
+          <option value="VEREJNE">Verejne</option>
         </select>
-
-        {location === "VEREJNE" && (
-          <input
-            type="number"
-            placeholder="Cena (€)"
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-            className="w-full border rounded p-2"
-          />
-        )}
 
         <button
           onClick={addCharging}
-          className="w-full bg-blue-600 text-white py-2 rounded"
+          className="bg-blue-600 text-white w-full py-2 rounded"
         >
-          Pridať nabíjanie
+          + Pridať nabíjanie
         </button>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-2 mt-4">
         {chargings.map(c => (
           <li
             key={c.id}
@@ -103,10 +105,16 @@ export default function Charging({ chargings, setChargings }: Props) {
             <div>
               <div className="font-semibold">{c.date}</div>
               <div className="text-sm text-gray-500">
-                {c.location} · {c.kwh} kWh
+                {c.location}
               </div>
             </div>
-            <div className="font-bold">{c.price.toFixed(2)} €</div>
+
+            <div className="text-right">
+              <div className="font-bold">{c.kwh} kWh</div>
+              <div className="text-sm text-green-600">
+                {c.price.toFixed(2)} €
+              </div>
+            </div>
           </li>
         ))}
       </ul>
