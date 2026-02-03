@@ -1,11 +1,16 @@
+export type Car = {
+  id: number
+  name: string
+  type: "EV" | "PETROL" | "DIESEL"
+  purchasePrice: number
+  consumption: number
+  active: boolean
+}
+
 export type Trip = {
   id: number
   date: string
   distance: number
-  type: string
-  evCost: number
-  petrolCost: number
-  dieselCost: number
 }
 
 export type Charging = {
@@ -20,9 +25,4 @@ export type CarPrices = {
   ev: number
   petrol: number
   diesel: number
-}
-
-export type Settings = {
-  id: number
-  darkMode: boolean
 }
