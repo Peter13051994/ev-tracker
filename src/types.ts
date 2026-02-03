@@ -21,3 +21,8 @@ export type CarPrices = {
   petrol: number
   diesel: number
 }
+
+export type Settings = {
+  id: number
+  darkMode: boolean
+}

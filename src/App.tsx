@@ -5,7 +5,11 @@ import Trips from "./pages/Trips"
 import Charging from "./pages/Charging"
 import Settings from "./pages/Settings"
 import BottomNav from "./components/BottomNav"
-import type { Trip, Charging as ChargingType, CarPrices } from "./types"
+import type {
+  Trip,
+  Charging as ChargingType,
+  CarPrices,
+} from "./types"
 import { supabase } from "./lib/supabase"
 
 export default function App() {
@@ -16,8 +20,9 @@ export default function App() {
     petrol: 19000,
     diesel: 9200,
   })
+  const [darkMode, setDarkMode] = useState(false)
 
-  // ===== LOAD =====
+  // LOAD
   useEffect(() => {
     const load = async () => {
       const { data: tripsData } = await supabase
@@ -48,49 +53,59 @@ export default function App() {
         )
       }
 
-      if (chargingsData) {
-        setChargings(chargingsData)
-      }
+      if (chargingsData) setChargings(chargingsData)
 
       if (settingsData) {
-        setCarPrices(settingsData)
+        setCarPrices({
+          ev: settingsData.ev,
+          petrol: settingsData.petrol,
+          diesel: settingsData.diesel,
+        })
+        setDarkMode(settingsData.darkMode)
       }
     }
 
     load()
   }, [])
 
-  // ===== SAVE =====
+  // SAVE
   useEffect(() => {
-    if (trips.length === 0) return
-    supabase.from("trips").upsert(
-      trips.map(t => ({
-        id: t.id,
-        date: t.date,
-        distance: t.distance,
-        type: t.type,
-        ev_cost: t.evCost,
-        petrol_cost: t.petrolCost,
-        diesel_cost: t.dieselCost,
-      }))
-    )
+    if (trips.length)
+      supabase.from("trips").upsert(
+        trips.map(t => ({
+          id: t.id,
+          date: t.date,
+          distance: t.distance,
+          type: t.type,
+          ev_cost: t.evCost,
+          petrol_cost: t.petrolCost,
+          diesel_cost: t.dieselCost,
+        }))
+      )
   }, [trips])
 
   useEffect(() => {
-    if (chargings.length === 0) return
-    supabase.from("chargings").upsert(chargings)
+    if (chargings.length)
+      supabase.from("chargings").upsert(chargings)
   }, [chargings])
 
   useEffect(() => {
     supabase.from("settings").upsert({
       id: 1,
       ...carPrices,
+      darkMode,
     })
-  }, [carPrices])
+  }, [carPrices, darkMode])
 
   return (
     <BrowserRouter>
-      <div className="pb-16 min-h-screen bg-gray-100">
+      <div
+        className={`pb-16 min-h-screen ${
+          darkMode
+            ? "bg-gray-900 text-white"
+            : "bg-gray-100"
+        }`}
+      >
         <Routes>
           <Route
             path="/"
@@ -121,6 +136,8 @@ export default function App() {
               <Settings
                 carPrices={carPrices}
                 setCarPrices={setCarPrices}
+                darkMode={darkMode}
+                setDarkMode={setDarkMode}
               />
             }
           />
